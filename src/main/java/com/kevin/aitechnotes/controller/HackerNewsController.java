@@ -1,6 +1,7 @@
 package com.kevin.aitechnotes.controller;
 
 import com.kevin.aitechnotes.entity.RawPost;
+import com.kevin.aitechnotes.service.AiProcessorService;
 import com.kevin.aitechnotes.service.HackerNewsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,9 +17,12 @@ import java.util.Map;
 public class HackerNewsController {
 
     private final HackerNewsService hackerNewsService;
+    private final AiProcessorService aiProcessorService;
 
-    public HackerNewsController(HackerNewsService hackerNewsService){
+    public HackerNewsController(HackerNewsService hackerNewsService,
+                                AiProcessorService aiProcessorService){
         this.hackerNewsService = hackerNewsService;
+        this.aiProcessorService = aiProcessorService;
     }
 
     // 手動觸發抓取
@@ -28,6 +32,11 @@ public class HackerNewsController {
         return ResponseEntity.ok(Map.of("message", "抓取完成，請查看 log"));
     }
 
+    @PostMapping("/process/ai")
+    public ResponseEntity<Map<String, String>> processWithAi(){
+        aiProcessorService.processUnprocessedPosts();
+        return ResponseEntity.ok(Map.of("message", "AI 處理完成，請查看 log"));
+    }
     // 健康檢查
     @GetMapping("health")
     public ResponseEntity<Map<String, String>> health(){
