@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -45,7 +46,7 @@ public class AiProcessorService {
                 .modelName(geminiModelId)
                 .build();
 
-        for(int i = 0; i < unprocessedPosts.size(); i++) {
+        for (int i = 0; i < unprocessedPosts.size(); i++) {
             RawPost post = unprocessedPosts.get(i);
             try {
                 // 除了第一層，每篇前都等待
@@ -115,7 +116,7 @@ public class AiProcessorService {
                 String after = errorMsg.substring(retryIndex);
                 // 找數字
                 StringBuilder numStr = new StringBuilder();
-                for (char c : after.toCharArray()){
+                for (char c : after.toCharArray()) {
                     if (Character.isDigit(c)) {
                         numStr.append(c);
                     } else if (numStr.length() > 0) {
@@ -133,70 +134,66 @@ public class AiProcessorService {
     }
 
     // 新增：把 prompt 獨立出來，analyzePost 拆成兩個職責
-    private String bulidPrompt(RawPost post){
+    private String bulidPrompt(RawPost post) {
         return """
-                你是一個技術內容分析師，請分析以下文章：
-
-                標題：%s
-                來源：%s
-
-                請用以下 JSON 格式回覆，不要加任何其他文字：
-                {
-                    "is_valuable": true或false,
-                    "tags": "標籤1,標籤2,標籤3",
-                    "summary": "繁體中文摘要，50字以內"
-                }
-
-                判斷標準：
-                - is_valuable: 是否與軟體開發、AI、程式設計相關
-                - tags: 2-3個關鍵技術標籤
-                - summary: 用繁體中文說明這篇文章在討論什麼
+                    你是一個技術內容分析師，請分析以下文章：
+                
+                    內容：%s
+                    來源：%s
+                
+                    請務必嚴格遵守以下規則：
+                    1. 必須只回覆合法的 JSON 格式。
+                    2. 絕對不要使用 Markdown 語法包裝（不要加上 ```json 和 ```）。
+                    3. 不要輸出任何 JSON 以外的解釋性文字。
+                
+                    請用以下 JSON 格式回覆：
+                    {
+                      "is_valuable": true或false,
+                      "tags": ["標籤1", "標籤2", "標籤3"],
+                      "summary": "繁體中文摘要，50字以內"
+                    }
+                
+                    判斷標準：
+                    - is_valuable: 是否與軟體開發、AI、後端架構相關
+                    - tags: 提取 2-3 個關鍵技術標籤（請務必輸出為 JSON 陣列格式）
+                    - summary: 用繁體中文說明這篇文章在討論什麼
                 """.formatted(post.getContent(), post.getPlatform());
-}
+    }
 
-private void saveAiNote(RawPost post, String aiResponse) {
-try {
-    // 清除 markdown 符號
-    String cleanJson = aiResponse
-            .replace("```json", "")
-            .replace("```", "")
-            .trim();
+    private void saveAiNote(RawPost post, String aiResponse) {
+        try {
+            // 清除 markdown 符號
+            String cleanJson = aiResponse
+                    .replace("```json", "")
+                    .replace("```", "")
+                    .trim();
 
+            // Jackson 解析
+            JsonNode root = objectMapper.readValue(cleanJson, JsonNode.class);
+            boolean isValuable = root.path("is_valuable").asBoolean(false);
+            String tags = "";
+            JsonNode tagsNode = root.path("tags");
+            if (tagsNode.isArray()) {
+                List<String> tagList = new ArrayList<>();
+                tagsNode.forEach(tag -> tagList.add(tag.asText()));
+                tags = String.join(",", tagList);
+            }
+            String summary = root.path("summary").asText("");
 
-    // 簡單解析 JSON
-//            boolean isValuable = cleanJson.contains("\"is_valuable\": true");
-//            String tags = extractJsonValue(cleanJson, "tags");
-//            String summary = extractJsonValue(cleanJson, "summary");
-    // Jackson 解析
-    JsonNode root = objectMapper.readValue(cleanJson, JsonNode.class);
-    boolean isValuable = root.path("is_valuable").asBoolean(false);
-    String tags = root.path("tags").asText("");
-    String summary = root.path("summary").asText("");
+            AiNote note = new AiNote();
+            note.setPost(post);
+            note.setIsValuable(isValuable);
+            note.setTags(tags);
+            note.setSummary(summary);
+            aiNoteRepository.save(note);
 
-    AiNote note = new AiNote();
-    note.setPost(post);
-    note.setIsValuable(isValuable);
-    note.setTags(tags);
-    note.setSummary(summary);
-    aiNoteRepository.save(note);
+            // 標記文章已處理
+            post.setIsProcessed(true);
+            rawPostRepository.save(post);
 
-    // 標記文章已處理
-    post.setIsProcessed(true);
-    rawPostRepository.save(post);
-
-    log.info("已儲存 AI 筆記：{}", summary);
-} catch (Exception e) {
-    log.error("儲存 AI 筆記失敗", e);
-}
-}
-
-//private String extractJsonValue(String json, String key) {
-//String searchKey = "\"" + key + "\": \"";
-//int start = json.indexOf(searchKey);
-//if(start == -1) return "";
-//start += searchKey.length();
-//int end = json.indexOf("\"", start);
-//if(end == -1) return "";
-//return json.substring(start, end);
-//}
+            log.info("已儲存 AI 筆記：{}", summary);
+        } catch (Exception e) {
+            log.error("儲存 AI 筆記失敗", e);
+        }
+    }
 }
