@@ -1,8 +1,12 @@
 package com.kevin.aitechnotes.controller;
 
+import com.kevin.aitechnotes.entity.AiNote;
 import com.kevin.aitechnotes.entity.RawPost;
+import com.kevin.aitechnotes.repository.AiNoteRepository;
 import com.kevin.aitechnotes.service.AiProcessorService;
+import com.kevin.aitechnotes.service.DiscordNotifierService;
 import com.kevin.aitechnotes.service.HackerNewsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,11 +22,25 @@ public class HackerNewsController {
 
     private final HackerNewsService hackerNewsService;
     private final AiProcessorService aiProcessorService;
+    private final DiscordNotifierService discordNotifierService;
+    private final AiNoteRepository aiNoteRepository;
+
 
     public HackerNewsController(HackerNewsService hackerNewsService,
-                                AiProcessorService aiProcessorService){
+                                AiProcessorService aiProcessorService,
+                                DiscordNotifierService discordNotifierService,
+                                AiNoteRepository aiNoteRepository){
         this.hackerNewsService = hackerNewsService;
         this.aiProcessorService = aiProcessorService;
+        this.discordNotifierService = discordNotifierService;
+        this.aiNoteRepository = aiNoteRepository;
+    }
+
+    @PostMapping("/notify/discord")
+    public String notifyDiscord() {
+        List<AiNote> allNotes = aiNoteRepository.findAllByOrderByCreatedAtDesc();
+        discordNotifierService.sendDailyDigest(allNotes);
+        return "Discord 推送完成！";
     }
 
     // 手動觸發抓取
