@@ -1,6 +1,8 @@
 package com.kevin.aitechnotes.service;
 
 import com.kevin.aitechnotes.entity.AiNote;
+import com.kevin.aitechnotes.repository.AiNoteRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -12,15 +14,18 @@ import java.util.Map;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DiscordNotifierService {
 
     @Value("${discord.webhook.url}")
     private String webhookUrl;
 
+    private final AiNoteRepository aiNoteRepository;
     private final RestClient restClient = RestClient.create();
 
-    public void sendDailyDigest(List<AiNote> notes){
+    public void sendDailyDigest(){
         // 只推送 AI 判斷有價值的文章
+        List<AiNote> notes = aiNoteRepository.findAllWithPostOrderByCreatedAtDesc();
         List<AiNote> valuableNotes = notes.stream()
                 .filter(AiNote::getIsValuable)
                 .toList();

@@ -38,8 +38,7 @@ public class HackerNewsController {
 
     @PostMapping("/notify/discord")
     public String notifyDiscord() {
-        List<AiNote> allNotes = aiNoteRepository.findAllByOrderByCreatedAtDesc();
-        discordNotifierService.sendDailyDigest(allNotes);
+        discordNotifierService.sendDailyDigest();
         return "Discord 推送完成！";
     }
 
