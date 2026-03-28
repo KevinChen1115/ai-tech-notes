@@ -20,6 +20,7 @@ public class RawPost {
     @Column(columnDefinition = "TEXT")  // 指定欄位類型為 TEXT，不限長度
     private String content;
 
+    @Column(unique = true)
     private String url;
     private LocalDateTime scrapedAt;
     private Boolean isProcessed = false;
