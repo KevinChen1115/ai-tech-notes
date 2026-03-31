@@ -10,4 +10,6 @@ import java.util.UUID;
 // 我們不需要自己寫 SQL，Spring Data JPA 會自動處理
 public interface RawPostRepository extends JpaRepository<RawPost, UUID> {
     List<RawPost> findByIsProcessed(boolean isProcessed);
+
+    List<RawPost> findAllByUrlIn(List<String> urls);
 }
