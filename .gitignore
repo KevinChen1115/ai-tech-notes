@@ -38,4 +38,4 @@ application-*.properties
 application.yml
 application-*.yml
 .env
-.env.*
+.env.*.env

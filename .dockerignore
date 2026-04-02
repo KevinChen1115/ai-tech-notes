@@ -1,0 +1,24 @@
+# .dockerignore
+# 跟 .gitignore 概念一樣：告訴 Docker「build 時不要複製這些檔案」
+# 減少 build context 大小，加速建構，也避免機密資訊洩漏
+
+# IDE 設定
+.idea/
+*.iml
+.vscode/
+
+# 編譯產物（反正 Docker 裡面會重新編譯）
+target/
+
+# Git
+.git/
+.gitignore
+
+# 環境變數檔（機密！不能打包進 image）
+.env
+
+# Docker 自己的設定檔
+
+# 文件
+README.md
+*.md

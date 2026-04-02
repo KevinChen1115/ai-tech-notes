@@ -1,0 +1,46 @@
+# docker-compose.yml
+# 開發環境用：在你自己的電腦上跑 App + PostgreSQL
+# 未來部署到 AWS 時，PostgreSQL 會換成 RDS，這個檔案會調整
+
+services:
+
+  # ---- 資料庫 ----
+  db:
+    image: postgres:17
+    container_name: ai-tech-notes-db
+    environment:
+      POSTGRES_DB: ai_tech_notes
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-localdev123}   # 預設值只用於本機開發
+    ports:
+      - "5432:5432"       # 讓你用 pgAdmin / DBeaver 從外面連進來看資料
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # 資料持久化，container 重啟不會遺失
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---- 應用程式 ----
+  app:
+    build: .              # 用同目錄下的 Dockerfile 來建構 image
+    container_name: ai-tech-notes-app
+    depends_on:
+      db:
+        condition: service_healthy   # 等 DB 健康檢查通過才啟動 App
+    environment:
+      # Spring Boot 會讀這些環境變數來覆蓋 application.yml 的設定
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/ai_tech_notes
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-localdev123}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}             # 從 .env 檔讀取
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}   # 從 .env 檔讀取
+    ports:
+      - "8080:8080"
+
+# 具名 Volume：Docker 管理的持久化儲存空間
+# 即使你 docker compose down，資料還在
+# 要徹底清除才用 docker compose down -v
+volumes:
+  pgdata:
