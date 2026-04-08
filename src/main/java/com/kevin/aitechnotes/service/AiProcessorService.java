@@ -86,7 +86,7 @@ public class AiProcessorService {
                     throw e;
                 }
 
-                if (errorMsg.contains("429") || errorMsg.contains("RESOURSE_EXHAUSTED")) {
+                if (errorMsg.contains("429") || errorMsg.contains("RESOURCE_EXHAUSTED")) {
                     // 429：解析等待秒數，預設35秒
                     long waitSeconds = parseRetryAfter(errorMsg);
                     log.warn("觸發 429，等待 {}秒 後重試...", waitSeconds);
