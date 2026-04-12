@@ -13,22 +13,7 @@
 
 ##  系統架構
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Collector 層   │────▶│  Processor 層    │────▶│  Notifier 層    │
-│                 │     │                 │     │                 │
-│ 從 Hacker News  │     │ Gemini AI 分析   │     │  推送到 Discord  │
-│ 抓取技術文章      │     │ 判斷價值 & 摘要   │     │     Webhook     │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-         │                       │                       │
-         └───────────────────────┴───────────────────────┘
-                                 │
-                        ┌────────────────┐
-                        │   PostgreSQL   │
-                        │  raw_posts     │
-                        │  ai_notes      │
-                        └────────────────┘
-```
+![系統架構圖](docs/ainotes.drawio.png)
 
 **為什麼分三層？**  
 每一層只負責一件事（單一職責原則）。Collector 不管 AI 怎麼分析，Processor 不管文章從哪來，Notifier 不管內容怎麼產生。這樣未來要換資料來源（例如從 Reddit 抓）或換通知管道（例如改發 Email），只需要改一層，不會牽一髮動全身。
@@ -75,9 +60,10 @@ ai_notes
 ##  目前進度
 
 - [x] **Phase 1**：Hacker News 抓取 → AI 分析 → 存入資料庫
-- [x] **Phase 2**：Discord Webhook 推送 + `@Scheduled` 每日自動執行
-- [x] **Phase 3-1**：防重複抓取（URL 正規化 + 三層過濾 + Unique Index）
-- [ ] **Phase 3**：擴充資料來源（Reddit、iT 邦幫忙）+ 錯誤處理機制
+- [x] **Phase 2**：Discord Webhook 推送 + 每日排程自動執行
+- [x] **Phase 3**：防重複抓取（TDD）+ Docker 化 + AWS 部署（EC2 + RDS）
+- [ ] **Phase 4**：效能優化（快取層、非同步處理）
+- [ ] **Phase 5**：使用者系統（驗證機制）
 
 ---
 
@@ -111,6 +97,9 @@ curl -X POST http://localhost:8080/api/collector/fetch
 
 # AI 分析
 curl -X POST http://localhost:8080/api/collector/process/ai
+
+# Discord 推送
+curl -X POST http://localhost:8080/api/collector/notify/discord
 ```
 
 ---
@@ -123,7 +112,7 @@ curl -X POST http://localhost:8080/api/collector/process/ai
 - API 速率限制問題排查與解決方案設計
 - Java 21 Virtual Threads 併發處理
 - TDD 開發流程與多層次測試策略（單元測試、切片測試、整合測試，共 19 個測試案例）
-
+- Docker 化（Multi-stage Build）後部署至 AWS EC2 + RDS，學習 Security Group 網路安全設定與環境變數管理
 ---
 
 *這是我轉職 Java 工程師期間的實戰作品集專案，持續更新中。*
