@@ -62,8 +62,9 @@ ai_notes
 - [x] **Phase 1**：Hacker News 抓取 → AI 分析 → 存入資料庫
 - [x] **Phase 2**：Discord Webhook 推送 + 每日排程自動執行
 - [x] **Phase 3**：防重複抓取（TDD）+ Docker 化 + AWS 部署（EC2 + RDS）
-- [ ] **Phase 4**：效能優化（快取層、非同步處理）
-- [ ] **Phase 5**：使用者系統（驗證機制）
+- [ ] **Phase 4**：RESTful API 重構、is_processed 改為 status-based、錯誤處理機制
+- [ ] **Phase 5**：快取層、非同步處理
+- [ ] **Phase 6**：使用者系統（驗證機制）
 
 ---
 
