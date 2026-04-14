@@ -15,6 +15,10 @@
 
 ![系統架構圖](docs/ainotes.drawio.png)
 
+## 運行結果
+
+![Discord 推送結果](docs/Discord-result.png)
+
 **為什麼分三層？**  
 每一層只負責一件事（單一職責原則）。Collector 不管 AI 怎麼分析，Processor 不管文章從哪來，Notifier 不管內容怎麼產生。這樣未來要換資料來源（例如從 Reddit 抓）或換通知管道（例如改發 Email），只需要改一層，不會牽一髮動全身。
 
