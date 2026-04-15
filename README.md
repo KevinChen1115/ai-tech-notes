@@ -32,7 +32,7 @@
 | 資料庫 | PostgreSQL + Spring Data JPA | 結構化儲存，JPA 自動產生 SQL 減少樣板程式碼 |
 | 通知 | Discord Webhook | 設定簡單，個人使用場景最輕量 |
 | 排程 | Spring `@Scheduled` | 內建功能，不需引入額外依賴 |
-
+| CI/CD | GitHub Actions + Docker Hub | push 到 main 自動測試、建置、部署 |
 ---
 
 ##  資料庫設計
@@ -65,9 +65,9 @@ ai_notes
 - [x] **Phase 1**：Hacker News 抓取 → AI 分析 → 存入資料庫
 - [x] **Phase 2**：Discord Webhook 推送 + 每日排程自動執行
 - [x] **Phase 3**：防重複抓取（TDD）+ Docker 化 + AWS 部署（EC2 + RDS）
-- [ ] **Phase 4**：RESTful API 重構、is_processed 改為 status-based、錯誤處理機制
-- [ ] **Phase 5**：快取層、非同步處理
-- [ ] **Phase 6**：使用者系統（驗證機制）
+- [x] **Phase 4**：GitHub Actions CI/CD（自動測試 → Docker Hub → AWS 部署）
+- [ ] **Phase 5**：RESTful API 重構、文章處理狀態優化、錯誤處理機制
+- [ ] **Phase 6**：效能優化（快取層、非同步處理）+ 使用者系統
 
 ---
 
@@ -86,8 +86,9 @@ git clone https://github.com/KevinChen1115/ai-tech-notes.git
 cd ai-tech-notes
 
 # 2. 設定環境變數
-cp src/main/resources/application.yml.example src/main/resources/application.yml
-# 填入你的 DB 設定與 Gemini API Key
+export GEMINI_API_KEY=你的API金鑰
+export DISCORD_WEBHOOK_URL=你的Webhook網址
+export DB_PASSWORD=你的資料庫密碼
 
 # 3. 啟動
 ./mvnw spring-boot:run
@@ -117,6 +118,7 @@ curl -X POST http://localhost:8080/api/collector/notify/discord
 - Java 21 Virtual Threads 併發處理
 - TDD 開發流程與多層次測試策略（單元測試、切片測試、整合測試，共 19 個測試案例）
 - Docker 化（Multi-stage Build）後部署至 AWS EC2 + RDS，學習 Security Group 網路安全設定與環境變數管理
+- GitHub Actions CI/CD 自動化流程（測試 → Docker Hub → AWS 部署），含 IAM 最小權限與 Security Group 動態管理
 ---
 
 *這是我轉職 Java 工程師期間的實戰作品集專案，持續更新中。*
