@@ -23,6 +23,8 @@ jobs:
       # 3. 跑測試
       - name: Run tests
         run: ./mvnw test -B
+        env:
+          GEMINI_API_KEY: fake-key
 
       # 4. 登入 Docker Hub
       - name: Login to Docker Hub
