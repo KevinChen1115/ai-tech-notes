@@ -1,0 +1,15 @@
+services:
+  app:
+    image: kevinchen1115/ai-tech-notes:latest
+    container_name: ai-tech-notes-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL_ID: ${GEMINI_MODEL_ID}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
