@@ -45,3 +45,53 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/ai-tech-notes:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/ai-tech-notes:${{ github.sha }}
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 取得 Runner IP
+      - name: Get Runner IP
+        id: ip
+        run: echo "RUNNER_IP=$(curl -s https://ifconfig.me)" >> $GITHUB_OUTPUT
+
+      # 2. 開放 Runner IP 進 SG
+      - name: Add SSH access to Security Group
+        run: |
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${{ secrets.EC2_SG_ID }} \
+            --protocol tcp \
+            --port 22 \
+            --cidr ${{ steps.ip.outputs.RUNNER_IP }}/32
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+
+      # 3. SSH 進 EC2 部署
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/ai-tech-notes
+            docker compose -f docker-compose.prod.yml down
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/ai-tech-notes:latest
+            docker compose -f docker-compose.prod.yml up -d
+            docker system prune -f
+
+      # 4. 關閉 Runner IP（無論成敗都執行）
+      - name: Remove SSH access from Security Group
+        if: always()
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ secrets.EC2_SG_ID }} \
+            --protocol tcp \
+            --port 22 \
+            --cidr ${{ steps.ip.outputs.RUNNER_IP }}/32
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
