@@ -25,6 +25,9 @@ jobs:
         run: ./mvnw test -B
         env:
           GEMINI_API_KEY: fake-key
+          DB_URL: jdbc:h2:mem:testdb
+          DB_USERNAME: sa
+          DB_PASSWORD: ""
 
       # 4. 登入 Docker Hub
       - name: Login to Docker Hub
