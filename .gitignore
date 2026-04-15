@@ -33,8 +33,6 @@ build/
 .vscode/
 
 ### Sensitive Config ###
-application.properties
-application-*.properties
 application.yml
 application-*.yml
 .env
