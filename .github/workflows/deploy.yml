@@ -77,9 +77,10 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/ai-tech-notes
-            docker compose -f docker-compose.prod.yml down
+            git pull
+            docker-compose -f docker-compose.prod.yml down
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/ai-tech-notes:latest
-            docker compose -f docker-compose.prod.yml up -d
+            docker-compose -f docker-compose.prod.yml up -d
             docker system prune -f
 
       # 4. 關閉 Runner IP（無論成敗都執行）
