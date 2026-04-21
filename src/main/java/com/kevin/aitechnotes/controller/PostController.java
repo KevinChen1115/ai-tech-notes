@@ -1,16 +1,15 @@
 package com.kevin.aitechnotes.controller;
 
 import com.kevin.aitechnotes.dto.ApiResponse;
+import com.kevin.aitechnotes.dto.CollectResult;
 import com.kevin.aitechnotes.dto.PostDto;
 import com.kevin.aitechnotes.entity.RawPost;
 import com.kevin.aitechnotes.exception.ResourceNotFoundException;
 import com.kevin.aitechnotes.repository.RawPostRepository;
+import com.kevin.aitechnotes.service.HackerNewsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 import java.util.List;
@@ -22,6 +21,7 @@ import java.util.UUID;
 public class PostController {
 
     private final RawPostRepository rawPostRepository;
+    private final HackerNewsService hackerNewsService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<PostDto>>> getAllPosts() {
@@ -37,6 +37,12 @@ public class PostController {
         RawPost post = rawPostRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("找不到 ID 為 " + id + " 的文章 "));
         return ResponseEntity.ok(ApiResponse.success("查詢成功", toDto(post)));
+    }
+
+    @PostMapping("collect")
+    public ResponseEntity<ApiResponse<CollectResult>> collect() {
+        CollectResult result = hackerNewsService.fetchAndSaveTopStories();
+        return ResponseEntity.ok(ApiResponse.success("抓取完成", result));
     }
 
     private PostDto toDto(RawPost post) {

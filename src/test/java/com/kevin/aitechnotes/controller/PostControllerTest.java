@@ -2,7 +2,8 @@ package com.kevin.aitechnotes.controller;
 
 import com.kevin.aitechnotes.entity.RawPost;
 import com.kevin.aitechnotes.repository.RawPostRepository;
-
+import com.kevin.aitechnotes.service.HackerNewsService;
+import com.kevin.aitechnotes.dto.CollectResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,9 +11,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import java.time.LocalDateTime;
 
@@ -26,6 +30,9 @@ class PostControllerTest {
 
     @Autowired
     private RawPostRepository rawPostRepository;
+
+    @MockitoBean
+    private HackerNewsService hackerNewsService;
 
     @Test
     @DisplayName("GET /api/posts - 回傳所有文章，格式為統一 ApiResponse")
@@ -74,5 +81,21 @@ class PostControllerTest {
         mockMvc.perform(get("/api/posts/00000000-0000-0000-0000-000000000000"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value("error"));
+    }
+
+    @Test
+    @DisplayName("POST /api/posts/collect - 觸發抓取，回傳結果統計")
+    void shouldCollectAndReturnResult() throws Exception {
+        // Arrange
+        when(hackerNewsService.fetchAndSaveTopStories())
+                .thenReturn(new CollectResult(30, 25, 5));
+
+        // Act & Assert
+        mockMvc.perform(post("/api/posts/collect"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data.found").value(30))
+                .andExpect(jsonPath("$.data.saved").value(25))
+                .andExpect(jsonPath("$.data.skipped").value(5));
     }
 }

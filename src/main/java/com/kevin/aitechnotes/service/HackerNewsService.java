@@ -1,6 +1,7 @@
 package com.kevin.aitechnotes.service;
 
 
+import com.kevin.aitechnotes.dto.CollectResult;
 import com.kevin.aitechnotes.entity.RawPost;
 import com.kevin.aitechnotes.repository.RawPostRepository;
 import com.kevin.aitechnotes.util.UrlNormalizer;
@@ -21,7 +22,7 @@ public class HackerNewsService {
     // RestClient 是 Spring Boot 4,0 推薦的 HTTP 客戶端
     private final RestClient restClient = RestClient.create("https://hacker-news.firebaseio.com/v0");
 
-    public void fetchAndSaveTopStories() {
+    public CollectResult fetchAndSaveTopStories() {
         log.info("開始抓取 Hacker News 文章...");
 
         //第一步：抓取前 30 篇熱門文章的 ID 列表
@@ -30,7 +31,7 @@ public class HackerNewsService {
                 .retrieve()
                 .body(int[].class);
 
-        if (storyIds == null) return;
+        if (storyIds == null) return new CollectResult(0, 0, 0);
 
         //第二步：只取前 30 篇
         List<RawPost> fetchedPosts = new ArrayList<>();
@@ -44,11 +45,12 @@ public class HackerNewsService {
                 log.error("抓取文章失敗，ID: {}", storyIds[i], e);
             }
         }
-        filterAndSave(fetchedPosts);
+        CollectResult result = filterAndSave(fetchedPosts);
         log.info("抓取完成！");
+        return result;
     }
 
-    public void filterAndSave(List<RawPost> fetchedPosts) {
+    public CollectResult filterAndSave(List<RawPost> fetchedPosts) {
         int found = fetchedPosts.size();
 
         // 正規化所有 URL
@@ -95,6 +97,8 @@ public class HackerNewsService {
         if (!newPosts.isEmpty()) {
             rawPostRepository.saveAll(newPosts);
         }
+
+        return new CollectResult(found, newCount, skipped);
     }
 
     private RawPost fetchStory(int storyId){
