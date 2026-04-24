@@ -1,5 +1,6 @@
 package com.kevin.aitechnotes.service;
 
+import com.kevin.aitechnotes.dto.ProcessResult;
 import com.kevin.aitechnotes.entity.AiNote;
 import com.kevin.aitechnotes.entity.RawPost;
 import com.kevin.aitechnotes.repository.AiNoteRepository;
@@ -35,7 +36,7 @@ public class AiProcessorService {
     private final AiNoteRepository aiNoteRepository;
     private final ObjectMapper objectMapper; // Jackson，Spring Boot 自動注入
 
-    public void processUnprocessedPosts() {
+    public ProcessResult processUnprocessedPosts() {
         // 撈出所有未處理的文章
         List<RawPost> unprocessedPosts = rawPostRepository.findByIsProcessed(false);
         log.info("找到 {} 篇未處理文章", unprocessedPosts.size());
@@ -45,6 +46,8 @@ public class AiProcessorService {
                 .apiKey(geminiApiKey)
                 .modelName(geminiModelId)
                 .build();
+
+        int valuableCount = 0;
 
         for (int i = 0; i < unprocessedPosts.size(); i++) {
             RawPost post = unprocessedPosts.get(i);
@@ -56,7 +59,9 @@ public class AiProcessorService {
                 }
                 // 改成呼叫有重試機制的方法
                 String response = callGeminiWithRetry(model, post);
-                saveAiNote(post, response);
+                if (saveAiNote(post, response)) {
+                    valuableCount++;
+                }
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // 標準作法，恢復中斷狀態
@@ -66,7 +71,9 @@ public class AiProcessorService {
                 log.error("AI 分析失敗，文章ID: {}", post.getId(), e);
             }
         }
-        log.info("AI 處理完成！");
+        int total = unprocessedPosts.size();
+        log.info("AI 處理完成！共 {} 篇有價值", total, valuableCount);
+        return new ProcessResult(total, valuableCount, total - valuableCount);
     }
 
     private String callGeminiWithRetry(GoogleAiGeminiChatModel model, RawPost post)
@@ -160,7 +167,7 @@ public class AiProcessorService {
                 """.formatted(post.getContent(), post.getPlatform());
     }
 
-    private void saveAiNote(RawPost post, String aiResponse) {
+    private boolean saveAiNote(RawPost post, String aiResponse) {
         try {
             // 清除 markdown 符號
             String cleanJson = aiResponse
@@ -192,8 +199,10 @@ public class AiProcessorService {
             rawPostRepository.save(post);
 
             log.info("已儲存 AI 筆記：{}", summary);
+            return isValuable;
         } catch (Exception e) {
             log.error("儲存 AI 筆記失敗", e);
+            return false;
         }
     }
 }

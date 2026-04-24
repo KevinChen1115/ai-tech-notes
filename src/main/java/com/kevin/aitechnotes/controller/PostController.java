@@ -27,7 +27,7 @@ public class PostController {
     public ResponseEntity<ApiResponse<List<PostDto>>> getAllPosts() {
         List<PostDto> posts = rawPostRepository.findAll()
                 .stream()
-                .map(this::toDto)
+                .map(PostDto::fromEntity)
                 .toList();
         return ResponseEntity.ok(ApiResponse.success("查詢成功", posts));
     }
@@ -36,24 +36,12 @@ public class PostController {
     public ResponseEntity<ApiResponse<PostDto>> getPostById(@PathVariable UUID id) {
         RawPost post = rawPostRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("找不到 ID 為 " + id + " 的文章 "));
-        return ResponseEntity.ok(ApiResponse.success("查詢成功", toDto(post)));
+        return ResponseEntity.ok(ApiResponse.success("查詢成功", PostDto.fromEntity(post)));
     }
 
     @PostMapping("collect")
     public ResponseEntity<ApiResponse<CollectResult>> collect() {
         CollectResult result = hackerNewsService.fetchAndSaveTopStories();
         return ResponseEntity.ok(ApiResponse.success("抓取完成", result));
-    }
-
-    private PostDto toDto(RawPost post) {
-        return new PostDto(
-                post.getId(),
-                post.getPlatform(),
-                post.getAuthor(),
-                post.getContent(),
-                post.getUrl(),
-                post.getScrapedAt(),
-                post.getIsProcessed()
-        );
     }
 }
