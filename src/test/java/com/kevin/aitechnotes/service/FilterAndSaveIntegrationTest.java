@@ -1,8 +1,10 @@
 package com.kevin.aitechnotes.service;
 
 import com.kevin.aitechnotes.entity.RawPost;
+import com.kevin.aitechnotes.repository.AiNoteRepository;
 import com.kevin.aitechnotes.repository.RawPostRepository;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,6 +25,15 @@ public class FilterAndSaveIntegrationTest {
 
     @Autowired
     RawPostRepository rawPostRepository;
+
+    @Autowired
+    AiNoteRepository aiNoteRepository;
+
+    @BeforeEach
+    void setUp() {
+        aiNoteRepository.deleteAll();
+        rawPostRepository.deleteAll();
+    }
 
     @Test
     void 三篇新文章應該全部存入(){
