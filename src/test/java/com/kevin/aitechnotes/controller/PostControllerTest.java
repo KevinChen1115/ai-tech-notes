@@ -1,9 +1,11 @@
 package com.kevin.aitechnotes.controller;
 
 import com.kevin.aitechnotes.entity.RawPost;
+import com.kevin.aitechnotes.repository.AiNoteRepository;
 import com.kevin.aitechnotes.repository.RawPostRepository;
 import com.kevin.aitechnotes.service.HackerNewsService;
 import com.kevin.aitechnotes.dto.CollectResult;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,15 @@ class PostControllerTest {
 
     @MockitoBean
     private HackerNewsService hackerNewsService;
+
+    @Autowired
+    private AiNoteRepository aiNoteRepository;
+
+    @BeforeEach
+    void setUp() {
+        aiNoteRepository.deleteAll();
+        rawPostRepository.deleteAll();
+    }
 
     @Test
     @DisplayName("GET /api/posts - 回傳所有文章，格式為統一 ApiResponse")
