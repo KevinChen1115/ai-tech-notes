@@ -1,5 +1,7 @@
 package com.kevin.aitechnotes.service;
 
+import com.kevin.aitechnotes.controller.NotificationController;
+import com.kevin.aitechnotes.dto.NotifyResult;
 import com.kevin.aitechnotes.entity.AiNote;
 import com.kevin.aitechnotes.repository.AiNoteRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,7 @@ public class DiscordNotifierService {
     private final AiNoteRepository aiNoteRepository;
     private final RestClient restClient = RestClient.create();
 
-    public void sendDailyDigest(){
+    public NotifyResult sendDailyDigest(){
         // 只推送 AI 判斷有價值的文章
         List<AiNote> notes = aiNoteRepository.findAllWithPostOrderByCreatedAtDesc();
         List<AiNote> valuableNotes = notes.stream()
@@ -32,11 +34,12 @@ public class DiscordNotifierService {
 
         if (valuableNotes.isEmpty()) {
             log.info("今日沒有值得推送的文章");
-            return;
+            return new NotifyResult(0, 0);
         }
 
         String content = buildMessage(valuableNotes);
         sendToDiscord(content);
+        return new NotifyResult(valuableNotes.size(), valuableNotes.size());
     }
 
     private String buildMessage(List<AiNote> notes) {
