@@ -66,8 +66,10 @@ ai_notes
 - [x] **Phase 2**：Discord Webhook 推送 + 每日排程自動執行
 - [x] **Phase 3**：防重複抓取（TDD）+ Docker 化 + AWS 部署（EC2 + RDS）
 - [x] **Phase 4**：GitHub Actions CI/CD（自動測試 → Docker Hub → AWS 部署）
-- [ ] **Phase 5**：RESTful API 重構、文章處理狀態優化、錯誤處理機制
-- [ ] **Phase 6**：效能優化（快取層、非同步處理）+ 使用者系統
+- [x] **Phase 5**：RESTful API 重構 + 統一回應格式 + 錯誤處理機制
+- [ ] **Phase 6**：JWT 驗證 + Spring Security
+- [ ] **Phase 7**：Redis 快取
+- [ ] **Phase 8**：擴充資料來源（Reddit、iT 邦幫忙）
 
 ---
 
@@ -105,6 +107,9 @@ curl -X POST http://localhost:8080/api/collector/process/ai
 
 # Discord 推送
 curl -X POST http://localhost:8080/api/collector/notify/discord
+
+# 健康檢查
+curl http://localhost:8080/api/health
 ```
 
 ---
@@ -116,9 +121,10 @@ curl -X POST http://localhost:8080/api/collector/notify/discord
 - 環境變數管理，敏感資訊不進版本控制
 - API 速率限制問題排查與解決方案設計
 - Java 21 Virtual Threads 併發處理
-- TDD 開發流程與多層次測試策略（單元測試、切片測試、整合測試，共 19 個測試案例）
+- TDD 開發流程與多層次測試策略（單元測試、切片測試、整合測試，共 29 個測試案例）
 - Docker 化（Multi-stage Build）後部署至 AWS EC2 + RDS，學習 Security Group 網路安全設定與環境變數管理
 - GitHub Actions CI/CD 自動化流程（測試 → Docker Hub → AWS 部署），含 IAM 最小權限與 Security Group 動態管理
+- RESTful API 設計（資源導向、統一回應格式 ApiResponse<T>、DTO 層隔離、全域例外處理）
 ---
 
 *這是我轉職 Java 工程師期間的實戰作品集專案，持續更新中。*
